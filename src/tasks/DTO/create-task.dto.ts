@@ -10,7 +10,3 @@ export class CreateTaskDto {
   })
   description: string;
 }
-
-export class GetTaskByIdDto {
-  id: string;
-}

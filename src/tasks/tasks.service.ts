@@ -9,8 +9,6 @@ import { TaskRepository } from './task.repository';
 
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [];
-
   constructor(
     @InjectRepository(Task)
     private taskRepository: TaskRepository,
@@ -23,15 +21,17 @@ export class TasksService {
       .select(['task.title', 'task.description', 'task.status'])
       .where('task.id = :id', { id })
       .getOne();
+
+    if (!task) {
+      throw new NotFoundException(`Task with id: ${id} not found`);
+    }
+
     return task;
   }
 
   async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    const { title, description } = createTaskDto;
-
-    const task: Task = await this.taskRepository.save({ title, description });
-
-    return task;
+    const task = this.taskRepository.create(createTaskDto);
+    return await this.taskRepository.save(task);
   }
 
   async getAllTasks(): Promise<Task[]> {
@@ -63,20 +63,17 @@ export class TasksService {
     const task: Task = await this.taskRepository.findOne({ where: { id } });
     if (!task) {
       throw new NotFoundException(
-        `can not delete task with id: ${getTaskByIdDto.id} ! not found !`,
+        `Cannot delete task with id: ${getTaskByIdDto.id}! Not found!`,
       );
     }
     await this.taskRepository.remove(task);
   }
+
   async updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {
-    const task: Task = await this.taskRepository.findOne({ where: { id } });
-    if (!task) {
-      throw new NotFoundException(`task with id: ${id} not found`);
+    const result = await this.taskRepository.update(id, { status });
+    if (result.affected === 0) {
+      throw new NotFoundException(`Task with id: ${id} not found`);
     }
-    task.status = status;
-
-    await this.taskRepository.save(task);
-
-    return task;
+    return this.taskRepository.findOne({ where: { id } });
   }
 }

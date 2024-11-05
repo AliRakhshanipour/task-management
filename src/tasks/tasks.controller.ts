@@ -21,7 +21,7 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get('')
-  getTasks(@Query() filterDto: FilterDto): Task[] {
+  async getTasks(@Query() filterDto: FilterDto): Promise<Task[]> {
     if (Object.keys(filterDto).length) {
       return this.tasksService.getTasksWithFilter(filterDto);
     } else {
@@ -41,16 +41,15 @@ export class TasksController {
   }
 
   @Delete('/:id')
-  deleteTask(@Param() getTaskByIdDto: GetTaskByIdDto): void {
-    const task = this.tasksService.deleteTask(getTaskByIdDto);
-    return task;
+  async deleteTask(@Param() getTaskByIdDto: GetTaskByIdDto): Promise<void> {
+    this.tasksService.deleteTask(getTaskByIdDto);
   }
 
   @Patch('/:id/status')
-  updateTaskStatus(
+  async updateTaskStatus(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
-  ): Task {
+  ): Promise<Task> {
     const { status } = updateTaskStatusDto;
     return this.tasksService.updateTaskStatus(id, status);
   }
